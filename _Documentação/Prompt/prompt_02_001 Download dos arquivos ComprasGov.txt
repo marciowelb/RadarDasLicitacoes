@@ -1,0 +1,371 @@
+# Prompt 02.001 — Download dos arquivos ComprasGov
+
+## Objetivo
+
+Implementar a rotina de download dos arquivos disponibilizados pelo Governo Federal no repositório de dados do ComprasGov/ComprasNet.
+
+Nesta etapa, a aplicação deverá realizar somente a descoberta, o download e a gravação local dos arquivos CSV. Não deverá processar os dados, gravar informações no Neon, relacionar fornecedores ou executar análise com inteligência artificial.
+
+## Escopo desta versão
+
+A rotina deverá baixar somente os dados do ComprasGov:
+
+- `pncp`;
+- `propostas`;
+- `pesquisa_precos`;
+- `arp`;
+- `catalogo_cnbs`;
+- `compras_legado`.
+
+A fonte oficial é:
+
+```text
+https://repositorio.dados.gov.br/seges/comprasgov/
+```
+
+Os dados de CNPJ da Receita Federal não fazem parte desta versão e não devem ser baixados ou processados nesta implementação.
+
+## Aplicação Windows
+
+A rotina deverá ser executada pela aplicação Windows, por meio do menu:
+
+```text
+Download
+??? Download dados Compras Governamentais
+```
+
+O usuário não deverá precisar executar scripts de download pelo terminal. Scripts de desenvolvimento poderão existir apenas como apoio técnico e não serão o fluxo principal da aplicação.
+
+A janela principal deverá continuar fina, funcionando como uma barra de menu. Ao selecionar a opção de download, deverá ser aberta uma janela independente para a operação.
+
+## Janela de download
+
+A janela independente de download deverá conter:
+
+- título da operação;
+- seleção da base ou família de dados;
+- ano inicial;
+- mês inicial, quando aplicável;
+- URL ou endereço identificado;
+- pasta de destino;
+- botão `Iniciar download`;
+- botão `Cancelar`;
+- barra de progresso;
+- percentual de conclusão, quando o tamanho for conhecido;
+- arquivo atualmente baixado;
+- quantidade de arquivos concluídos;
+- log de execução visível na tela;
+- mensagem final de sucesso, cancelamento ou erro.
+
+A janela não deverá travar durante o download. A operação deverá ser executada em uma thread ou mecanismo equivalente, mantendo a interface responsiva.
+
+## Log de execução na tela
+
+A janela deverá apresentar um componente de log somente leitura, contendo mensagens como:
+
+```text
+Iniciando download dos dados ComprasGov.
+Ano inicial configurado: 2025.
+Localizando arquivos da base PNCP.
+Arquivo encontrado: compra_2025_01.csv.zip.
+Iniciando download: compra_2025_01.csv.zip.
+Progresso: 45%.
+Download concluído.
+Extraindo arquivo CSV.
+CSV gravado em data/raw/comprasgov/pncp/2025/01/.
+Operação concluída.
+```
+
+O log deverá:
+
+- exibir data e hora da mensagem;
+- permanecer visível durante toda a operação;
+- utilizar mensagens em português;
+- informar o arquivo que está sendo processado;
+- informar erros com detalhes suficientes para diagnóstico;
+- não exibir senhas, tokens ou dados sensíveis;
+- permitir rolagem vertical;
+- atualizar a tela sem bloquear a interface.
+
+## Barra de execução
+
+A barra de execução deverá:
+
+- iniciar em zero;
+- ser atualizada durante o download;
+- indicar percentual quando o servidor informar o tamanho do arquivo;
+- utilizar modo indeterminado quando o tamanho não estiver disponível;
+- ser zerada ou finalizada ao terminar a operação;
+- indicar visualmente quando a operação for cancelada;
+- permanecer associada ao arquivo em execução.
+
+Quando vários arquivos forem baixados, exibir também:
+
+```text
+Arquivos concluídos: 3 de 12
+Arquivo atual: compra_item_2025_01.csv.zip
+```
+
+## Período dos dados
+
+O ano inicial deverá ser definido em uma variável centralizada, para que possa ser alterado futuramente sem modificar a lógica de download:
+
+```python
+ANO_INICIAL_DADOS = 2025
+```
+
+A regra inicial será baixar dados de 2025 em diante.
+
+Não fixar o valor `2025` diretamente dentro dos métodos de download. Todos os métodos deverão consultar a configuração centralizada.
+
+Quando a fonte utilizar mês, iniciar pelo mês configurado:
+
+```python
+MES_INICIAL_DADOS = 1
+```
+
+Configuração sugerida:
+
+```python
+URL_BASE_COMPRASGOV = (
+    "https://repositorio.dados.gov.br/seges/comprasgov/"
+)
+
+ANO_INICIAL_DADOS = 2025
+MES_INICIAL_DADOS = 1
+DIRETORIO_DADOS_BRUTOS = "data/raw/comprasgov"
+DIRETORIO_DOWNLOAD_TEMPORARIO = "data/temporario/downloads"
+```
+
+## Local de gravação
+
+Os CSVs deverão ser gravados sem alteração em:
+
+```text
+data/raw/comprasgov/
+```
+
+Estrutura esperada:
+
+```text
+data/
+??? raw/
+?   ??? comprasgov/
+?       ??? pncp/
+?       ?   ??? 2025/
+?       ?       ??? 01/
+?       ??? propostas/
+?       ?   ??? 2025/
+?       ??? pesquisa_precos/
+?       ?   ??? 2025/
+?       ??? arp/
+?       ?   ??? 2025/
+?       ??? catalogo_cnbs/
+?       ??? compras_legado/
+?
+??? temporario/
+    ??? downloads/
+```
+
+Os arquivos temporários deverão ser gravados em `data/temporario/downloads`. Após o download e a extração bem-sucedidos, o CSV deverá ser movido para `data/raw/comprasgov`.
+
+O arquivo final não deverá ser escrito diretamente. Utilizar extensão temporária durante o download:
+
+```text
+compra_2025_01.csv.zip.part
+```
+
+Após a conclusão e validação:
+
+```text
+compra_2025_01.csv.zip
+```
+
+Como o objetivo final desta etapa é gravar o CSV, o ZIP poderá ser removido após a extração bem-sucedida, desde que o CSV tenha sido validado e gravado corretamente.
+
+## Suporte a CSV e ZIP
+
+Os arquivos do ComprasGov podem ser CSV direto ou CSV armazenado dentro de ZIP.
+
+Criar classes específicas:
+
+- `BaixadorDeArquivos`: operações HTTP comuns;
+- `BaixadorDeCsv`: download de CSV direto;
+- `BaixadorDeZip`: download e validação de ZIP;
+- `ExtratorDeCsv`: localização e extração do CSV interno;
+- `ValidadorDeDownload`: validação de tamanho, resposta e integridade;
+- `FonteComprasGov`: montagem de endereços e identificação das bases;
+- `JanelaDownloadComprasGov`: interface da operação.
+
+O download não deverá ser implementado diretamente na janela gráfica.
+
+## Biblioteca HTTP
+
+Utilizar uma biblioteca específica para comunicação HTTP. A biblioteca padrão recomendada é:
+
+```text
+httpx
+```
+
+Utilizar também, quando necessário:
+
+```text
+tenacity
+```
+
+para novas tentativas em erros temporários.
+
+A rotina deverá suportar:
+
+- timeout configurável;
+- download em blocos;
+- retry controlado;
+- cancelamento solicitado pelo usuário;
+- resposta HTTP inválida;
+- erro de conexão;
+- arquivo inexistente;
+- arquivo incompleto;
+- servidor sem informação de tamanho;
+- atualização da barra de progresso.
+
+## Preservação dos dados
+
+O CSV deverá ser salvo exatamente como foi disponibilizado pela fonte.
+
+Nesta etapa não realizar:
+
+- alteração de nomes de colunas;
+- conversão de tipos;
+- conversão de datas;
+- alteração de separador;
+- alteração de codificação;
+- remoção de registros;
+- deduplicação;
+- normalização;
+- carga no banco;
+- análise estatística;
+- análise com IA.
+
+A leitura do CSV para confirmar sua existência não deve modificar seu conteúdo.
+
+## Fluxo da operação
+
+```text
+Usuário seleciona Download dados Compras Governamentais
+        ?
+Janela independente é aberta
+        ?
+Aplicação lê ANO_INICIAL_DADOS
+        ?
+FonteComprasGov identifica os arquivos de 2025 em diante
+        ?
+BaixadorDeArquivos inicia o download
+        ?
+Log e barra de progresso são atualizados
+        ?
+Arquivo é salvo temporariamente
+        ?
+Arquivo é validado
+        ?
+CSV é extraído, quando estiver dentro de ZIP
+        ?
+CSV é gravado em data/raw/comprasgov
+        ?
+ZIP temporário é removido
+        ?
+Usuário recebe o resultado da operação
+```
+
+## Cancelamento
+
+O usuário deverá poder cancelar a operação.
+
+Ao cancelar:
+
+- interromper o download quando possível;
+- fechar a conexão HTTP;
+- excluir ou preservar como erro o arquivo `.part` incompleto;
+- registrar o cancelamento no log;
+- liberar a interface;
+- não considerar o arquivo como concluído.
+
+Mensagem esperada:
+
+```text
+Download cancelado pelo usuário.
+Arquivo incompleto removido da pasta temporária.
+```
+
+## Padrão obrigatório dos arquivos Python
+
+Todos os arquivos `.py` deverão obedecer ao padrão definido em:
+
+```text
+_Documentação/Prompt/prompt_01_001 Padrão de código.txt
+```
+
+Cada arquivo deverá possuir cabeçalho com:
+
+- nome do arquivo;
+- descrição;
+- classes e métodos principais;
+- autor;
+- e-mail;
+- telefone;
+- data de criação;
+- data da última alteração;
+- lista de mudanças.
+
+Utilizar os dados do autor:
+
+```text
+Marcio Welb de Aguiar Silveira
+marciowelb@outlook.com.br
+55 11 98137-0755
+```
+
+Cada método deverá possuir documentação e o separador no início e no fim:
+
+```python
+# -------------------------------------------------------------------------
+```
+
+O arquivo também deverá terminar com o rodapé de autoria definido no padrão de código.
+
+## Estrutura sugerida
+
+```text
+app/
+??? configuracao.py
+??? interface/
+?   ??? janela_principal.py
+?   ??? menu_download.py
+?   ??? janela_download_comprasgov.py
+??? fontes/
+?   ??? fonte_comprasgov.py
+??? download/
+?   ??? baixador_de_arquivos.py
+?   ??? baixador_de_csv.py
+?   ??? baixador_de_zip.py
+?   ??? extrator_de_csv.py
+?   ??? validador_de_download.py
+??? comum/
+    ??? logger.py
+    ??? arquivos.py
+```
+
+## Resultado esperado
+
+Ao final da implementação, o usuário deverá conseguir:
+
+1. abrir a aplicação Windows;
+2. acessar o menu `Download`;
+3. selecionar `Download dados Compras Governamentais`;
+4. escolher a base e o período;
+5. iniciar o download;
+6. acompanhar o log na tela;
+7. acompanhar a barra de execução;
+8. cancelar a operação, se necessário;
+9. encontrar os CSVs em `data/raw/comprasgov`.
+
+A implementação não deverá incluir os dados de CNPJ nesta etapa e não deverá utilizar o Neon até que a fase de processamento seja iniciada.
