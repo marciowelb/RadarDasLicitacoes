@@ -25,6 +25,8 @@ from app.configuracao import (
     DIRETORIO_DADOS_BRUTOS,
     DIRETORIO_DOWNLOAD_TEMPORARIO,
     DIRETORIO_MANIFESTO,
+    ANO_INICIAL_DADOS,
+    MES_INICIAL_DADOS,
 )
 from app.download.baixador_de_arquivos import BaixadorDeArquivos
 from app.download.extrator_de_csv import ExtratorDeCsv
@@ -37,7 +39,6 @@ class JanelaDownloadComprasGov:
     """Executa o download dos arquivos ComprasGov em janela independente."""
 
     # -------------------------------------------------------------------------
-
     def __init__(self, janela_principal):
         """Inicializa a janela e seus componentes de download."""
         self.janela_principal = janela_principal
@@ -49,24 +50,28 @@ class JanelaDownloadComprasGov:
         self.manifesto = ManifestoDeArquivos(DIRETORIO_MANIFESTO)
         self.download_em_execucao = False
         hoje = date.today()
-        indice_mes = hoje.year * 12 + hoje.month - 1 - 11
-        self.ano_inicial_padrao = indice_mes // 12
-        self.mes_inicial_padrao = indice_mes % 12 + 1
+        self.ano_inicial_padrao = ANO_INICIAL_DADOS
+        self.mes_inicial_padrao = MES_INICIAL_DADOS
         self.ano_final_padrao = hoje.year
         self.mes_final_padrao = hoje.month
         self.configurar_janela()
         self.criar_componentes()
-
     # -------------------------------------------------------------------------
 
+
+
+    # -------------------------------------------------------------------------
     def configurar_janela(self):
         """Configura tamanho, título e comportamento da janela."""
         self.janela.title("Download dados Compras Governamentais")
         self.janela.geometry("800x620")
         self.janela.minsize(700, 500)
-
     # -------------------------------------------------------------------------
 
+
+
+
+    # -------------------------------------------------------------------------
     def criar_componentes(self):
         """Cria os campos, botões, log e barra de progresso."""
         quadro_selecao = ttk.LabelFrame(self.janela, text="Parâmetros do download")
@@ -83,25 +88,48 @@ class JanelaDownloadComprasGov:
         )
         seletor_familia.grid(row=0, column=1, padx=8, pady=8)
 
-        ttk.Label(quadro_selecao, text="Início (ano/mês):").grid(row=0, column=2, padx=8, pady=8)
-        self.ano_inicial = tk.StringVar(value=str(self.ano_inicial_padrao))
-        ttk.Entry(quadro_selecao, textvariable=self.ano_inicial, width=8).grid(
-            row=0, column=3, padx=2, pady=8
-        )
-        self.mes_inicial = tk.StringVar(value=f"{self.mes_inicial_padrao:02d}")
-        ttk.Entry(quadro_selecao, textvariable=self.mes_inicial, width=5).grid(
-            row=0, column=4, padx=2, pady=8
-        )
+        anos = tuple(str(ano) for ano in range(ANO_INICIAL_DADOS, date.today().year + 2))
+        meses = tuple(f"{mes:02d}" for mes in range(1, 13))
 
-        ttk.Label(quadro_selecao, text="Fim (ano/mês):").grid(row=0, column=5, padx=8, pady=8)
+        ttk.Label(quadro_selecao, text="Início - ano:").grid(row=0, column=2, padx=(8, 2), pady=8)
+        self.ano_inicial = tk.StringVar(value=str(self.ano_inicial_padrao))
+        ttk.Combobox(
+            quadro_selecao,
+            textvariable=self.ano_inicial,
+            values=anos,
+            state="readonly",
+            width=7,
+        ).grid(row=0, column=3, padx=2, pady=8)
+
+        ttk.Label(quadro_selecao, text="mês:").grid(row=0, column=4, padx=(8, 2), pady=8)
+        self.mes_inicial = tk.StringVar(value=f"{self.mes_inicial_padrao:02d}")
+        ttk.Combobox(
+            quadro_selecao,
+            textvariable=self.mes_inicial,
+            values=meses,
+            state="readonly",
+            width=4,
+        ).grid(row=0, column=5, padx=2, pady=8)
+
+        ttk.Label(quadro_selecao, text="Fim - ano:").grid(row=0, column=6, padx=(8, 2), pady=8)
         self.ano_final = tk.StringVar(value=str(self.ano_final_padrao))
-        ttk.Entry(quadro_selecao, textvariable=self.ano_final, width=8).grid(
-            row=0, column=6, padx=2, pady=8
-        )
+        ttk.Combobox(
+            quadro_selecao,
+            textvariable=self.ano_final,
+            values=anos,
+            state="readonly",
+            width=7,
+        ).grid(row=0, column=7, padx=2, pady=8)
+
+        ttk.Label(quadro_selecao, text="mês:").grid(row=0, column=8, padx=(8, 2), pady=8)
         self.mes_final = tk.StringVar(value=f"{self.mes_final_padrao:02d}")
-        ttk.Entry(quadro_selecao, textvariable=self.mes_final, width=5).grid(
-            row=0, column=7, padx=2, pady=8
-        )
+        ttk.Combobox(
+            quadro_selecao,
+            textvariable=self.mes_final,
+            values=meses,
+            state="readonly",
+            width=4,
+        ).grid(row=0, column=9, padx=2, pady=8)
 
         quadro_botoes = ttk.Frame(self.janela)
         quadro_botoes.pack(fill="x", padx=12, pady=(0, 8))
@@ -140,12 +168,21 @@ class JanelaDownloadComprasGov:
         barra_rolagem = ttk.Scrollbar(quadro_log, command=self.log.yview)
         barra_rolagem.pack(side="right", fill="y")
         self.log.configure(yscrollcommand=barra_rolagem.set)
-
     # -------------------------------------------------------------------------
 
+
+
+
+
+    # -------------------------------------------------------------------------
     def registrar_log(self, mensagem):
         """Adiciona uma mensagem ao log de forma segura para a interface."""
         self.janela.after(0, self._adicionar_log, mensagem)
+    # -------------------------------------------------------------------------
+
+
+
+
 
     # -------------------------------------------------------------------------
 

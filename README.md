@@ -1,181 +1,298 @@
 # Radar das Licitações
 
-O **Radar das Licitações** é um projeto de dados abertos para coletar, organizar e analisar preços praticados em compras públicas e processos licitatórios no Brasil. A primeira etapa do projeto consiste na **baixa reproduzível de dados da internet**, preservando os arquivos originais, sua origem e a data da coleta. Em etapas posteriores, os dados serão normalizados em um banco de dados e utilizados em análises estatísticas e modelos de inteligência artificial.
+Aplicação Windows em Python para descoberta, download, validação e extração de dados públicos do ComprasGov. A interface é construída com `tkinter` e a comunicação HTTP utiliza `httpx`.
 
-## Aplicação Windows
+## Estado atual
 
-A aplicação Windows é criada em Python com `tkinter`. A janela principal funciona como uma barra fina de menus; as funcionalidades são abertas em janelas independentes.
+A versão atual implementa a primeira etapa da ingestão:
 
-### Menu disponível
+- seleção da família de dados e do período na interface;
+- descoberta de arquivos no repositório oficial do ComprasGov;
+- download HTTP em blocos para arquivos temporários `.part`;
+- cancelamento pelo usuário e atualização de progresso;
+- validação de existência, tamanho e extensão (`.csv` ou `.zip`);
+- extração dos CSVs contidos em arquivos ZIP;
+- registro de status em `data/raw/comprasgov/manifesto_download.jsonl`;
+- prevenção de novo download quando a URL já possui status `CONCLUIDO`.
 
-- **Download > Download dados Compras Governamentais**
-- **Download > Download dados de CNPJ** — reservado para uma versão futura.
+Ainda não estão implementados o download de CNPJ, retry automático, hash, persistência em banco, staging, normalização e análise de preços com IA.
 
-A opção de Compras Governamentais abre a rotina de download, com log, barra de progresso, cancelamento e gravação dos CSVs em `data/raw/comprasgov`. O download de CNPJ ainda não está implementado.
+A janela principal possui uma barra de atalhos para o download de ComprasGov e para o formulário de CNPJ. O atalho de CNPJ está disponível visualmente, mas ainda exibe uma mensagem informando que a funcionalidade será implementada posteriormente.
 
-O período inicial é configurado por `ANO_INICIAL_DADOS = 2025`. Nesta etapa não há processamento dos CSVs nem gravação no Neon.
+O menu `Ajuda` possui:
 
-Para executar a aplicação na raiz do projeto:
+- `README`: lê o arquivo `README.md` e o abre no navegador com Markdown renderizado e diagramas Mermaid, utilizando as bibliotecas JavaScript carregadas pela página;
+- `Sobre`: exibe o objetivo do sistema, o autor e os dados de contato.
+
+## Execução
+
+Na raiz do projeto:
 
 ```powershell
 python main.py
 ```
 
-No Visual Studio, defina o arquivo `main.py` da raiz como arquivo de inicialização. O arquivo `app/main.py` continua sendo o ponto de entrada interno para execução como módulo.
+Também é possível instalar o projeto e usar o comando configurado em `pyproject.toml`:
 
-> O projeto está em fase de levantamento e preparação da ingestão. As estruturas de banco, chaves e regras de negócio ainda devem ser validadas com o perfilamento completo dos arquivos.
+```powershell
+pip install -e .
+radar-licitacoes
+```
 
-## Objetivos
+Requisitos: Python `>=3.11` e dependência `httpx>=0.27,<1.0`. O `tkinter` também deve estar disponível na instalação do Python.
 
-- Baixar dados públicos de compras, itens, propostas, resultados e preços de referência.
-- Manter rastreabilidade: fonte, URL, competência, data de download, tamanho, hash e versão do arquivo.
-- Integrar dados de compras públicas com catálogos de materiais/serviços e cadastro de fornecedores.
-- Criar uma base histórica para comparar preços, identificar outliers e apoiar estimativas de preços.
-- Disponibilizar consultas e indicadores para apoiar decisões em licitações, sem substituir a análise técnica ou jurídica.
+## Arquitetura de diretórios
 
-## Fontes de dados
+```text
+.
+├── main.py                              # Entrada para execução direta
+├── pyproject.toml                       # Metadados, dependências e comando CLI
+├── app/
+│   ├── main.py                          # Inicialização interna
+│   ├── configuracao.py                  # URLs, período e diretórios
+│   ├── fontes/
+│   │   └── fonte_comprasgov.py          # Descoberta e filtragem de URLs
+│   ├── download/
+│   │   ├── baixador_de_arquivos.py      # Download HTTP em blocos
+│   │   ├── validador_de_download.py     # Validação do arquivo temporário
+│   │   ├── extrator_de_csv.py            # Extração de CSV de ZIP
+│   │   └── manifesto_de_arquivos.py     # Persistência de status em JSONL
+│   └── interface/
+│       ├── janela_principal.py          # Janela raiz e ciclo Tkinter
+│       ├── menu_download.py              # Menu e abertura das operações
+│       ├── menu_ajuda.py                 # Menu README e Sobre
+│       ├── janela_ajuda.py               # Visualização do README e Sobre
+│       └── janela_download_comprasgov.py # Orquestração da operação
+├── data/
+│   ├── raw/comprasgov/                  # CSVs extraídos e manifesto
+│   └── temporario/downloads/             # Arquivos .part durante o download
+└── _Documentação/                        # Documentação complementar do projeto
+```
 
-| Fonte | Uso no projeto |
-|---|---|
-| [Repositório ComprasGov](https://repositorio.dados.gov.br/seges/comprasgov/) | Downloads históricos em CSV/ZIP de PNCP, propostas, pesquisa de preços, ARP, catálogos e legado. |
-| [Portal de dados abertos do Compras.gov.br](https://www.gov.br/compras/pt-br/cidadao/portal-de-dados-abertos/explorador-de-dados) | Catálogo institucional e ponto de entrada para os dados. |
-| [Swagger da API Compras.gov.br](https://dadosabertos.compras.gov.br/swagger-ui/index.html) | Consulta de catálogos, contratações, fornecedores, preços e outros módulos. |
-| [Contrato OpenAPI](https://dadosabertos.compras.gov.br/v3/api-docs) | Endpoints, parâmetros e esquemas para construir o coletor. |
-| [Cadastro Nacional da Pessoa Jurídica](https://dados.gov.br/dados/conjuntos-dados/cadastro-nacional-da-pessoa-juridica---cnpj) | Dados cadastrais e vínculos de fornecedores. |
-| [Arquivos públicos da Receita Federal](https://arquivos.receitafederal.gov.br/index.php/s/YggdBLfdninEJX9) | Arquivos mensais do CNPJ para carga cadastral. |
+## Desenho da arquitetura e correlação do código
 
-## Documentação do levantamento
+O ponto central da aplicação é `JanelaDownloadComprasGov`. Ela coordena a interface e compõe os serviços especializados: `FonteComprasGov` descobre os arquivos; `BaixadorDeArquivos` transfere o conteúdo; `ValidadorDeDownload` verifica o temporário; `ExtratorDeCsv` trata ZIPs; e `ManifestoDeArquivos` registra a execução.
+
+```mermaid
+classDiagram
+    class main_py {
+        +iniciar_aplicacao()
+    }
+    class AppMain {
+        +iniciar_aplicacao()
+    }
+    class JanelaPrincipal {
+        -janela
+        -menu_download
+        +configurar_janela()
+        +criar_menu()
+        +executar()
+    }
+    class MenuDownload {
+        -janela_principal
+        +criar_menu(barra_de_menu)
+        +exibir_download_compras_governamentais()
+        +exibir_download_cnpj()
+    }
+    class MenuAjuda {
+        +criar_menu(barra_de_menu)
+        +exibir_readme()
+        +exibir_sobre()
+    }
+    class JanelaReadme {
+        +abrir_readme()
+    }
+    class JanelaSobre {
+        +__init__(janela_pai)
+    }
+    class JanelaDownloadComprasGov {
+        -fonte_comprasgov
+        -baixador
+        -validador
+        -extrator
+        -manifesto
+        +criar_componentes()
+        +iniciar_download()
+        +executar_download(...)
+        +baixar_arquivo_encontrado(...)
+        +cancelar_download()
+        +finalizar_download()
+    }
+    class FonteComprasGov {
+        +obter_enderecos_pncp(ano, mes)
+        +obter_familias()
+        +validar_periodo(...)
+        +listar_arquivos(...)
+        +obter_caminho_relativo(...)
+        -_listar_links(...)
+        -_listar_arquivos_diretorio(...)
+        -_listar_arquivos_anuais_mensais(...)
+        -_listar_arquivos_arp(...)
+        -_listar_arquivos_legado(...)
+        -_arquivo_deve_ser_baixado(...)
+    }
+    class ExtratorDeLinks {
+        +handle_starttag(tag, atributos)
+    }
+    class BaixadorDeArquivos {
+        +baixar_arquivo(endereco, caminho_temporario, funcao_progresso)
+        +calcular_percentual(quantidade_baixada, tamanho_total)
+        +cancelar_download()
+    }
+    class ValidadorDeDownload {
+        +validar_arquivo(caminho_arquivo)
+        +validar_extensao(caminho_arquivo)
+    }
+    class ExtratorDeCsv {
+        +extrair_csv(caminho_zip, diretorio_destino)
+    }
+    class ManifestoDeArquivos {
+        +registrar(endereco, status, caminho_destino, mensagem)
+        +foi_concluido(endereco)
+    }
+
+    main_py --> AppMain : delega
+    AppMain --> JanelaPrincipal : cria
+    JanelaPrincipal *-- MenuDownload : compõe
+    JanelaPrincipal *-- MenuAjuda : compõe
+    MenuDownload --> JanelaDownloadComprasGov : abre
+    MenuAjuda --> JanelaReadme : abre README
+    MenuAjuda --> JanelaSobre : abre informações
+    JanelaDownloadComprasGov *-- FonteComprasGov
+    JanelaDownloadComprasGov *-- BaixadorDeArquivos
+    JanelaDownloadComprasGov *-- ValidadorDeDownload
+    JanelaDownloadComprasGov *-- ExtratorDeCsv
+    JanelaDownloadComprasGov *-- ManifestoDeArquivos
+    FonteComprasGov *-- ExtratorDeLinks : usa para HTML
+    BaixadorDeArquivos ..> httpx : HTTP streaming
+    JanelaDownloadComprasGov ..> Thread : execução em segundo plano
+    JanelaDownloadComprasGov ..> tkinter : atualiza via after()
+```
+
+### Responsabilidade por módulo
+
+| Módulo/classe | Responsabilidade | Métodos principais |
+|---|---|---|
+| `main.py` | Entrada para execução direta no Visual Studio. | `iniciar_aplicacao()` |
+| `app.main` | Cria a janela principal e inicia o loop. | `iniciar_aplicacao()` |
+| `JanelaPrincipal` | Janela raiz e barra de menus. | `configurar_janela()`, `criar_menu()`, `executar()` |
+| `MenuDownload` | Constrói o menu e abre cada opção. | `criar_menu()`, `exibir_download_compras_governamentais()`, `exibir_download_cnpj()` |
+| `JanelaDownloadComprasGov` | Controla parâmetros, thread, progresso, log e orquestração. | `iniciar_download()`, `executar_download()`, `baixar_arquivo_encontrado()` |
+| `FonteComprasGov` | Consulta índices HTML, percorre famílias e filtra período/extensão. | `listar_arquivos()`, `validar_periodo()`, `obter_familias()` |
+| `ExtratorDeLinks` | Extrai atributos `href` das páginas de índice. | `handle_starttag()` |
+| `BaixadorDeArquivos` | Faz GET com streaming e grava no caminho temporário. | `baixar_arquivo()`, `cancelar_download()` |
+| `ValidadorDeDownload` | Confirma arquivo não vazio e extensão suportada. | `validar_arquivo()`, `validar_extensao()` |
+| `ExtratorDeCsv` | Localiza CSVs no ZIP e os grava no destino. | `extrair_csv()` |
+| `ManifestoDeArquivos` | Mantém histórico JSON Lines thread-safe por URL. | `registrar()`, `foi_concluido()` |
+| `app.configuracao` | Centraliza URL, diretórios, timeout e tamanho do bloco. | Constantes de configuração |
+
+## Famílias de dados
+
+`FonteComprasGov.obter_familias()` disponibiliza:
+
+- `pncp`;
+- `propostas`;
+- `pesquisa_precos`;
+- `arp`;
+- `catalogo_cnbs`;
+- `compras_legado`.
+
+A opção `todas` percorre todas as famílias. A descoberta varia conforme a estrutura publicada: famílias anuais/mensais, `arp`, `compras_legado` e diretório direto de `catalogo_cnbs`.
+
+## Fluxo de download
+
+```mermaid
+flowchart TD
+    A[Usuário executa main.py] --> B[app.main.iniciar_aplicacao]
+    B --> C[JanelaPrincipal]
+    C --> D[Menu Download]
+    D --> E[JanelaDownloadComprasGov]
+    E --> F[Usuário seleciona família e período]
+    F --> G{validar_periodo}
+    G -- inválido --> H[Exibe erro e não inicia]
+    G -- válido --> I[Inicia Thread executar_download]
+    I --> J[obter_familias ou família selecionada]
+    J --> K[FonteComprasGov.listar_arquivos]
+    K --> L[Consulta índices HTML do repositório]
+    L --> M[ExtratorDeLinks coleta href]
+    M --> N[Filtra anos, meses, CSVs e ZIPs]
+    N --> O{Para cada URL encontrada}
+    O --> P{Manifesto.foi_concluido?}
+    P -- sim --> Q[Ignora e registra no log]
+    P -- não --> R[Registra BAIXANDO]
+    R --> S[BaixadorDeArquivos.baixar_arquivo]
+    S --> T[GET HTTP em blocos para arquivo .part]
+    T --> U{Cancelamento solicitado?}
+    U -- sim --> V[Interrompe com RuntimeError]
+    U -- não --> W[Atualiza progresso e continua]
+    W --> X[Validador valida existência e tamanho]
+    X --> Y[Validador valida extensão]
+    Y --> Z{Arquivo é ZIP?}
+    Z -- sim --> AA[ExtratorDeCsv extrai CSVs em data/raw]
+    Z -- não --> AB[Move .part para o destino CSV]
+    AA --> AC[Remove temporário e registra CONCLUIDO]
+    AB --> AC
+    V --> AD[Registra ERRO e remove .part]
+    X --> AD
+    Y --> AD
+    AD --> O
+    Q --> O
+    AC --> O
+    O --> AE[Finaliza operação e libera botões]
+```
+
+### Sequência de uma operação
+
+1. `JanelaDownloadComprasGov.iniciar_download()` converte os campos para inteiros e valida o intervalo.
+2. A operação é executada em uma `Thread`, mantendo a interface responsiva.
+3. `executar_download()` seleciona uma ou todas as famílias e chama `FonteComprasGov.listar_arquivos()`.
+4. A fonte consulta o índice HTTP, extrai links, percorre diretórios e filtra o período solicitado.
+5. Para cada URL, `baixar_arquivo_encontrado()` verifica se já existe conclusão no manifesto.
+6. O conteúdo é baixado por `BaixadorDeArquivos` para `data/temporario/downloads/<arquivo>.part`.
+7. O progresso é enviado à interface por `janela.after()`, evitando atualização de widgets fora da thread principal.
+8. O arquivo temporário é validado. ZIPs são extraídos por `ExtratorDeCsv`; CSVs são movidos diretamente para `data/raw/comprasgov`.
+9. O manifesto recebe `CONCLUIDO` ou `ERRO`, com URL, destino e mensagem. O temporário é removido em caso de falha.
+10. Ao terminar, `finalizar_download()` reabilita os controles da janela.
+
+## Configuração e arquivos gerados
+
+As constantes ficam em `app/configuracao.py`:
+
+| Constante | Valor padrão | Uso |
+|---|---:|---|
+| `URL_BASE_COMPRASGOV` | repositório oficial | Raiz da descoberta |
+| `ANO_INICIAL_DADOS` | `2025` | Ano padrão da fonte |
+| `DIRETORIO_DADOS_BRUTOS` | `data/raw/comprasgov` | Destino dos dados |
+| `DIRETORIO_DOWNLOAD_TEMPORARIO` | `data/temporario/downloads` | Arquivos parciais |
+| `DIRETORIO_MANIFESTO` | `data/raw/comprasgov/manifesto_download.jsonl` | Histórico da operação |
+| `TEMPO_LIMITE_DOWNLOAD` | `60.0` segundos | Timeout HTTP |
+| `TAMANHO_BLOCO_DOWNLOAD` | `1 MiB` | Tamanho dos blocos HTTP |
+
+Cada linha do manifesto contém `data_hora`, `endereco`, `status`, `caminho_destino` e `mensagem`. Os status usados atualmente são `BAIXANDO`, `CONCLUIDO` e `ERRO`.
+
+## Limitações e próximos passos
+
+- O botão de CNPJ apenas informa que a funcionalidade será implementada futuramente.
+- O manifesto evita repetição por URL, mas não calcula hash nem compara versões do conteúdo.
+- Não há retomada de arquivos `.part` nem política de retry automático.
+- A extração usa apenas o nome do arquivo dentro do ZIP; arquivos com nomes repetidos podem sobrescrever o destino.
+- Não há carga em Neon/PostgreSQL, tabelas `raw`/`staging`, normalização ou análise estatística.
+- Uma evolução natural é adicionar testes automatizados, hash, retries, retomada, isolamento por família e preservação do caminho relativo publicado.
+
+## Autor e responsável técnico
+
+**Marcio Welb de Aguiar Silveira** é o autor e responsável técnico pelo projeto **Radar das Licitações**, uma solução orientada à rastreabilidade de dados públicos, à automação de processos governamentais e à construção de uma base confiável para análises de preços e apoio à tomada de decisão.
+
+Sua atuação combina engenharia de software, arquitetura distribuída e inteligência artificial aplicada:
+
+> **Senior Software Engineer** especializado em Digital Banking, plataformas de crédito e soluções para governo digital, com experiência em Clean Architecture, Domain-Driven Design (DDD), padrões SAGA, sistemas orientados a eventos e desenvolvimento AI-First. Atua com .NET e Python e também é praticante e instrutor de Aikido.
+
+- **E-mail:** [marciowelb@outlook.com.br](mailto:marciowelb@outlook.com.br)
+- **Telefone:** `55 (11) 98137-0755`
+
+## Documentação complementar
 
 - [Estrutura de diretórios e arquitetura](_Documentação/Arquitetura/Estrutura_Diretorios.md)
 - [Dados do ComprasGov e layouts](_Documentação/Analise/Documentacao_Dados_ComprasGov.md)
 - [Endpoints da API ComprasGov](_Documentação/Analise/Documentacao_API_ComprasGov_Endpoints.md)
 - [Arquivos CNPJ, download e modelo de banco](_Documentação/Analise/Documentacao_CNPJ_Download_Layout_BancoDados.md)
-
-## Fluxo inicial de dados
-
-```mermaid
-flowchart LR
-    F[Fontes oficiais] --> D[Download e descoberta]
-    D --> V[Validação de ZIP, CSV, tamanho e hash]
-    V --> O[Armazenamento dos originais]
-    O --> S[Staging: dados brutos]
-    S --> N[Normalização e vínculos]
-    N --> B[(Banco analítico)]
-    B --> A[Indicadores e modelos de IA]
-```
-
-### Princípios da ingestão
-
-1. Descobrir arquivos e registrar a resposta da fonte antes do download.
-2. Baixar em partes quando necessário, com retry, checkpoint e promoção atômica.
-3. Validar tamanho, integridade do ZIP/CSV e hash antes de carregar.
-4. Preservar identificadores, CPF/CNPJ, códigos e zeros à esquerda como texto.
-5. Usar `Decimal` para valores monetários e quantidades; não usar `float` em cálculos financeiros.
-6. Usar parser CSV com suporte a aspas, delimitador em texto e quebras de linha.
-7. Separar dados originais, staging e dados normalizados para permitir reprocessamento.
-8. Não impor chaves ou regras de negócio antes do perfilamento completo dos dados.
-
-## Proposta de banco de dados
-
-Uma arquitetura inicial recomendada é:
-
-| Camada | Conteúdo | Tecnologia sugerida |
-|---|---|---|
-| `raw` | ZIPs/CSV originais, metadados, hashes e logs de download | Object storage, filesystem ou S3 compatível |
-| `staging` | Linhas brutas com os tipos ainda próximos da origem | Neon/PostgreSQL ou Parquet/DuckDB |
-| `core` | Compras, itens, fornecedores, propostas, resultados, catálogos e snapshots | Neon/PostgreSQL |
-| `analytics` | Histórico de preços, agregações, métricas e atributos para modelos | Neon/PostgreSQL, DuckDB ou warehouse |
-| `ml` | Features, previsões, versões de modelos e métricas | Neon/PostgreSQL + MLflow |
-
-Entidades iniciais:
-
-- `snapshot` e `arquivo_origem`, para versionamento e rastreabilidade;
-- `compra`, `item_compra`, `proposta` e `resultado_item`;
-- `fornecedor`, `empresa`, `estabelecimento` e seus vínculos cadastrais;
-- `catalogo_material`, `catalogo_servico` e unidades de medida;
-- `pesquisa_preco`, `ata_registro_preco` e `contrato`;
-- tabelas de domínio e correspondências geográficas.
-
-### Referências para implementação do banco
-
-- [Neon](https://neon.tech/docs) — banco PostgreSQL gerenciado utilizado inicialmente pelo projeto.
-- [Console do projeto no Neon](https://console.neon.tech/app/projects/late-dawn-95658203/branches/br-noisy-scene-b66k5mdz/tables) — administração das tabelas e branches.
-- [PostgreSQL](https://www.postgresql.org/docs/) — referência da engine relacional utilizada pelo Neon.
-- [PostGIS](https://postgis.net/documentation/) — consultas geográficas, se necessárias.
-- [DuckDB](https://duckdb.org/docs/) — exploração local de CSV/Parquet e cargas analíticas.
-- [Apache Parquet](https://parquet.apache.org/docs/) — formato colunar para dados históricos.
-- [MinIO](https://min.io/docs/minio/linux/index.html) — armazenamento de objetos compatível com S3 para ambiente próprio.
-- [dbt](https://docs.getdbt.com/) — transformação, documentação e testes das tabelas analíticas.
-- [Alembic](https://alembic.sqlalchemy.org/) — versionamento de migrações quando a ingestão for implementada em Python.
-
-### Uso inicial do Neon
-
-O Neon será utilizado inicialmente como a base central do projeto. A conexão deve ser configurada por variável de ambiente, nunca gravada no código ou no README:
-
-```text
-DATABASE_URL=postgresql://usuario:senha@host/neondb?sslmode=require
-```
-
-Recomendações:
-
-- manter a `DATABASE_URL` em segredo e utilizar o recurso de conexão fornecido pelo Neon;
-- habilitar `sslmode=require` nas conexões da aplicação;
-- separar ambientes por branches do Neon, como desenvolvimento, homologação e produção;
-- criar migrações versionadas para tabelas e índices;
-- utilizar pool de conexões para a aplicação e cargas controladas para grandes importações;
-- registrar no banco a origem, competência, URL, hash e status de cada arquivo baixado;
-- avaliar o uso de [Neon Serverless Driver](https://neon.tech/docs/serverless/serverless-driver) para aplicações serverless.
-
-## Análise de preços com IA
-
-A IA deve ser aplicada sobre dados normalizados, com proveniência e qualidade conhecidas. O objetivo não é gerar um preço sem explicação, mas produzir uma **faixa de referência auditável**, acompanhada das observações usadas, do período, da região, da unidade de medida e da confiança da estimativa.
-
-### Casos de uso previstos
-
-- Comparar preço estimado, homologado e praticado.
-- Detectar outliers, duplicidades, alterações de unidade e possíveis erros de cadastro.
-- Normalizar descrições de itens e agrupar itens semanticamente semelhantes.
-- Estimar uma faixa de preço por item, quantidade, região, período, órgão e características técnicas.
-- Recuperar casos históricos semelhantes para explicar a estimativa.
-- Monitorar alteração de preços e deterioração da qualidade dos modelos.
-
-### Abordagem recomendada
-
-1. **Qualidade:** validar tipos, unidades, datas, cancelamentos, quantidades e duplicidades.
-2. **Normalização:** relacionar itens aos catálogos CATMAT/CATSER e preservar a descrição original.
-3. **Features:** criar atributos temporais, geográficos, do órgão, fornecedor, quantidade e categoria.
-4. **Baseline:** começar com mediana e intervalos por item/categoria/região/período.
-5. **Modelos supervisionados:** comparar modelos como regressão, Random Forest, Gradient Boosting e XGBoost.
-6. **Texto e similaridade:** usar embeddings para encontrar descrições semelhantes, sempre com filtros de unidade e categoria.
-7. **Validação temporal:** treinar em períodos anteriores e testar em períodos posteriores, evitando vazamento de informação.
-8. **Explicabilidade:** armazenar amostra de referência, atributos relevantes, versão do modelo e métricas.
-
-### Referências para IA e MLOps
-
-- [scikit-learn](https://scikit-learn.org/stable/) — preparação, validação e modelos clássicos.
-- [XGBoost](https://xgboost.readthedocs.io/) — modelos de gradient boosting para dados tabulares.
-- [Sentence Transformers](https://www.sbert.net/) — embeddings e busca semântica de descrições.
-- [pgvector](https://github.com/pgvector/pgvector) — armazenamento e busca de vetores no PostgreSQL.
-- [MLflow](https://mlflow.org/docs/latest/) — registro de modelos, experimentos e métricas.
-- [Evidently](https://docs.evidentlyai.com/) — monitoramento de qualidade, drift e desempenho.
-- [OpenAI API](https://platform.openai.com/docs/) — opção para extração/normalização assistida de texto; não deve substituir regras determinísticas e validações financeiras.
-
-## Cuidados, limites e governança
-
-- Os dados publicados podem conter revisões, atrasos, campos ausentes e layouts diferentes entre competências.
-- A presença de um registro cadastral não comprova que o fornecedor forneceu determinado item.
-- Preço estimado, preço homologado e preço efetivamente praticado são medidas diferentes.
-- Valores anômalos não devem ser removidos automaticamente: devem ser marcados e investigados.
-- Dados pessoais devem ser minimizados, protegidos e utilizados apenas quando necessários ao objetivo do projeto.
-- Toda previsão deve informar data de referência, fonte, população comparável, versão do modelo e limitações.
-- A decisão final deve permanecer sob responsabilidade da equipe competente da contratação.
-
-## Próximas etapas
-
-1. Definir o coletor e o manifesto de arquivos por fonte.
-2. Implementar download incremental com validação e retomada.
-3. Criar tabelas `raw` e `staging` e executar perfilamento das primeiras competências.
-4. Definir chaves, regras de deduplicação e correspondências entre ComprasGov, PNCP e CNPJ.
-5. Carregar o modelo `core` e publicar consultas de qualidade e rastreabilidade.
-6. Criar o baseline estatístico de preços antes de treinar modelos de IA.
-7. Medir precisão, cobertura, estabilidade e explicabilidade das previsões.
