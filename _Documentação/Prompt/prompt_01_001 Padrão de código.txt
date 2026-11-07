@@ -1,0 +1,531 @@
+# Prompt 01.001 — Padrão de código
+
+## Objetivo
+
+Criar código Python para o projeto Radar das Licitações seguindo obrigatoriamente as regras de nomenclatura, organização, documentação e separação descritas neste documento.
+
+O código será executado inicialmente por uma aplicação Windows. As funções de download, processamento e importação no banco Neon devem ser implementadas em módulos próprios e acionadas pela interface da aplicação.
+
+## Cabeçalho obrigatório em cada arquivo Python
+
+Todo arquivo com extensão `.py` deve começar com um cabeçalho informativo, antes de qualquer importação ou código executável. O cabeçalho deve informar:
+
+- o nome do arquivo;
+- o objetivo e o que o código faz;
+- os principais métodos, funções ou classes existentes;
+- o autor;
+- a data de criação;
+- a data da última alteração;
+- a lista de mudanças realizadas.
+
+Utilizar este padrão:
+
+```python
+# =============================================================================
+# Arquivo: app/interface/janela_principal.py
+# Descrição: Cria e controla a janela principal da aplicação Windows.
+#
+# Classes:
+#   - JanelaPrincipal: representa a janela principal e sua barra de menu.
+#
+# Métodos e funções principais:
+#   - configurar_janela: configura o tamanho e o comportamento da janela.
+#   - criar_menu: cria a barra de menus da aplicação.
+#   - executar: inicia o ciclo de eventos da interface.
+#
+# Autor: Marcio Welb de Aguiar Silveira
+# E-mail: marciowelb@outlook.com.br
+# Telefone: 55 11 98137-0755
+# Data de criação: AAAA-MM-DD
+# Última alteração: AAAA-MM-DD
+#
+# Lista de mudanças:
+#   - Descrever aqui cada alteração realizada no arquivo.
+# =============================================================================
+```
+
+
+
+No final de cada codigo .py, insira
+'''
+
+
+Marcio Welb de Aguiar Silveira
+marciowelb@outlook.com.br
+55 11 98137-0755
+'''
+
+
+Regras do cabeçalho:
+
+1. O cabeçalho é obrigatório em todos os arquivos `.py`, inclusive arquivos `__init__.py`.
+2. O campo `Autor` deve identificar o autor do projeto. Enquanto o nome não estiver definido, utilizar   por default deixe o usuário como Marcio Welb de Aguiar Silveira, marciowelb@outlook.com.br, 55 11 98137-0755
+3. As datas devem utilizar o formato `AAAA-MM-DD`.
+4. A data de criação não deve ser alterada após o arquivo ser criado.
+5. A data da última alteração deve ser atualizada sempre que o arquivo for modificado.
+6. Toda alteração relevante deve ser adicionada à lista de mudanças.
+7. O cabeçalho não substitui as docstrings das classes, métodos e funções.
+8. O cabeçalho deve permanecer compatível com UTF-8.
+
+## Separador obrigatório no início e no fim de cada método
+
+O separador abaixo deve aparecer imediatamente antes da declaração de cada método e imediatamente depois do corpo de cada método:
+
+```python
+# -------------------------------------------------------------------------
+```
+
+Exemplo obrigatório:
+
+```python
+class Exemplo:
+    """Exemplo de classe documentada."""
+
+
+    # -------------------------------------------------------------------------
+        def executar_operacao(self):
+        """Executa uma operação de exemplo."""
+        resultado = True
+        return resultado
+    # -------------------------------------------------------------------------
+
+
+```
+
+O separador deve ser utilizado também no último método da classe.
+
+## Regras gerais
+
+1. Utilizar Python como linguagem principal.
+2. Escrever código simples, legível, modular e fácil de manter.
+3. Não concentrar todas as responsabilidades em um único arquivo ou classe.
+4. Separar interface, regras de negócio, download, processamento e banco de dados.
+5. Não misturar código de interface gráfica com regras de download ou persistência.
+6. Utilizar classes específicas para cada responsabilidade importante.
+7. Evitar funções extensas; dividir operações complexas em métodos menores.
+8. Não duplicar código. Criar funções ou classes reutilizáveis quando necessário.
+9. Não criar abstrações complexas sem necessidade real.
+10. Preservar compatibilidade com execução no Windows.
+
+## Nomenclatura obrigatória em português
+
+Todos os nomes criados no código devem estar em português, incluindo:
+
+- classes;
+- métodos;
+- funções;
+- variáveis;
+- constantes;
+- parâmetros;
+- atributos;
+- arquivos e módulos, quando aplicável.
+
+Utilizar nomes claros e descritivos. Evitar abreviações que dificultem o entendimento.
+
+### Classes
+
+Utilizar `PascalCase`, com nomes em português:
+
+```python
+class GerenciadorDeDownloads:
+    pass
+
+
+class ValidadorDeArquivo:
+    pass
+
+
+class RepositorioDeCompras:
+    pass
+```
+
+### Métodos e funções
+
+Utilizar `snake_case`, com nomes em português e iniciando com um verbo quando representar uma ação:
+
+```python
+def baixar_arquivo(self, endereco, caminho_destino):
+    pass
+
+
+def validar_arquivo_zip(caminho_arquivo):
+    pass
+
+
+def importar_dados_no_banco(registros):
+    pass
+```
+
+### Variáveis e atributos
+
+Utilizar `snake_case` e nomes que indiquem claramente o conteúdo:
+
+```python
+endereco_arquivo = "https://exemplo.gov.br/dados.zip"
+caminho_destino = "data/raw/dados.zip"
+data_download = datetime.now()
+tamanho_arquivo = 0
+quantidade_registros = 0
+```
+
+Evitar nomes genéricos ou pouco informativos:
+
+```python
+# Evitar
+x = 10
+dados = obter_dados()
+temp = "arquivo.zip"
+
+# Preferir
+quantidade_registros = 10
+registros_compras = obter_registros()
+nome_arquivo_temporario = "arquivo.zip"
+```
+
+### Constantes
+
+Utilizar letras maiúsculas, com nomes em português:
+
+```python
+TEMPO_LIMITE_DOWNLOAD = 300
+TAMANHO_BLOCO_DOWNLOAD = 1024 * 1024
+QUANTIDADE_MAXIMA_TENTATIVAS = 3
+```
+
+## Classes obrigatórias para download
+
+O download não deve ser implementado diretamente na tela, no menu ou em uma função genérica da aplicação. Deve utilizar classes específicas.
+
+Estrutura mínima recomendada:
+
+```python
+class ConfiguracaoDeDownload:
+    """Armazena as configurações utilizadas durante o download."""
+
+    def __init__(self, tempo_limite, quantidade_tentativas, tamanho_bloco):
+        self.tempo_limite = tempo_limite
+        self.quantidade_tentativas = quantidade_tentativas
+        self.tamanho_bloco = tamanho_bloco
+
+    # -------------------------------------------------------------------------
+
+    def validar_configuracao(self):
+        """Valida se os parâmetros de download estão corretos."""
+        pass
+
+
+class BaixadorDeArquivos:
+    """Realiza o download de arquivos das fontes externas."""
+
+    def __init__(self, configuracao, registrador):
+        self.configuracao = configuracao
+        self.registrador = registrador
+
+    # -------------------------------------------------------------------------
+
+    def baixar_arquivo(self, endereco, caminho_destino):
+        """Baixa um arquivo e salva o conteúdo no caminho informado."""
+        pass
+
+    # -------------------------------------------------------------------------
+
+    def baixar_com_retentativa(self, endereco, caminho_destino):
+        """Executa o download novamente quando ocorrer uma falha temporária."""
+        pass
+
+    # -------------------------------------------------------------------------
+
+    def cancelar_download(self):
+        """Solicita o cancelamento do download em execução."""
+        pass
+
+
+class ValidadorDeDownload:
+    """Valida a integridade e os metadados do arquivo baixado."""
+
+    # -------------------------------------------------------------------------
+
+    def validar_tamanho_arquivo(self, caminho_arquivo, tamanho_esperado):
+        """Compara o tamanho local com o tamanho informado pela fonte."""
+        pass
+
+    # -------------------------------------------------------------------------
+
+    def calcular_hash_arquivo(self, caminho_arquivo):
+        """Calcula o hash do arquivo para controle de integridade."""
+        pass
+
+    # -------------------------------------------------------------------------
+
+    def validar_arquivo_zip(self, caminho_arquivo):
+        """Verifica se o arquivo ZIP pode ser aberto e lido."""
+        pass
+
+
+class ManifestoDeArquivos:
+    """Registra os arquivos encontrados, baixados e processados."""
+
+    # -------------------------------------------------------------------------
+
+    def registrar_arquivo(self, dados_arquivo):
+        """Registra os metadados de um arquivo no manifesto."""
+        pass
+
+    # -------------------------------------------------------------------------
+
+    def consultar_arquivo(self, identificador_arquivo):
+        """Consulta o estado de um arquivo no manifesto."""
+        pass
+```
+
+A interface Windows deve apenas solicitar a operação ao serviço apropriado:
+
+```python
+class JanelaPrincipal:
+    """Representa a janela principal da aplicação Windows."""
+
+    def __init__(self, servico_de_download):
+        self.servico_de_download = servico_de_download
+
+    # -------------------------------------------------------------------------
+
+    def executar_download(self):
+        """Inicia o download solicitado pelo usuário através do menu."""
+        self.servico_de_download.iniciar_download()
+```
+
+A janela não deve conter chamadas HTTP, leitura de ZIP, cálculo de hash ou gravação direta no banco.
+
+## Cabeçalho obrigatório em cada arquivo Python
+
+Todo arquivo com extensão `.py` deve começar com um cabeçalho informativo, antes de qualquer importação ou código executável. O cabeçalho deve informar:
+
+- o nome do arquivo;
+- o objetivo e o que o código faz;
+- os principais métodos, funções ou classes existentes;
+- o autor;
+- a data de criação;
+- a data da última alteração;
+- a lista de mudanças realizadas.
+
+Utilizar este padrão:
+
+```python
+# =============================================================================
+# Arquivo: app/interface/janela_principal.py
+# Descrição: Cria e controla a janela principal da aplicação Windows.
+#
+# Classes:
+#   - JanelaPrincipal: representa a janela principal e sua barra de menu.
+#
+# Métodos e funções principais:
+#   - configurar_janela: configura o tamanho e o comportamento da janela.
+#   - criar_menu: cria a barra de menus da aplicação.
+#   - executar: inicia o ciclo de eventos da interface.
+#
+# Autor: Usuário do projeto
+# Data de criação: 2026-11-05
+# Última alteração: 2026-11-05
+#
+# Lista de mudanças:
+#   - Criação da estrutura inicial da janela principal.
+# =============================================================================
+```
+
+Regras do cabeçalho:
+
+1. O cabeçalho é obrigatório em todos os arquivos `.py`, inclusive arquivos `__init__.py`.
+2. O campo `Autor` deve identificar o autor do projeto. Enquanto o nome não estiver definido, utilizar `Usuário do projeto`.
+3. A data deve utilizar o formato `AAAA-MM-DD`.
+4. A data de criação não deve ser alterada após o arquivo ser criado.
+5. A data da última alteração deve ser atualizada sempre que o arquivo for modificado.
+6. Toda alteração relevante deve ser adicionada à lista de mudanças.
+7. O cabeçalho não substitui as docstrings das classes, métodos e funções.
+8. O cabeçalho deve permanecer compatível com UTF-8.
+
+## Separador obrigatório no início e no fim de cada método
+
+O separador abaixo deve aparecer imediatamente antes da declaração de cada método e imediatamente depois do corpo de cada método:
+
+```python
+# -------------------------------------------------------------------------
+```
+
+Exemplo obrigatório:
+
+```python
+class Exemplo:
+    """Exemplo de classe documentada."""
+
+    # -------------------------------------------------------------------------
+    def executar_operacao(self):
+        """Executa uma operação de exemplo."""
+        resultado = True
+        return resultado
+    # -------------------------------------------------------------------------
+
+
+```
+
+O separador deve ser utilizado também no último método da classe. Não deixar métodos consecutivos sem o separador no final do método anterior e no início do método seguinte.
+
+## Separador obrigatório entre métodos
+
+Deve ser inserido um separador visual entre cada método de uma classe. Utilizar o seguinte padrão:
+
+```python
+# -------------------------------------------------------------------------
+```
+
+O separador deve ficar entre o final de um método e a declaração do método seguinte:
+
+```python
+class ProcessadorDeDados:
+    """Processa os arquivos baixados."""
+
+    def __init__(self):
+        self.quantidade_registros = 0
+
+    # -------------------------------------------------------------------------
+
+    def ler_arquivo(self, caminho_arquivo):
+        """Lê o arquivo de origem e retorna seus registros."""
+        pass
+
+    # -------------------------------------------------------------------------
+
+    def validar_registros(self, registros):
+        """Valida os registros antes da normalização."""
+        pass
+
+    # -------------------------------------------------------------------------
+
+    def normalizar_registros(self, registros):
+        """Padroniza os campos para o modelo interno do projeto."""
+        pass
+```
+
+Também utilizar o separador entre o construtor `__init__` e o primeiro método público.
+
+## Documentação obrigatória
+
+Todo código novo deve ser documentado.
+
+### Classes
+
+Toda classe deve possuir uma docstring explicando:
+
+- qual problema resolve;
+- qual é sua responsabilidade;
+- quais são suas principais dependências;
+- o que não é responsabilidade dela, quando isso evitar confusão.
+
+Exemplo:
+
+```python
+class ImportadorDeCompras:
+    """
+    Importa registros normalizados de compras para o banco Neon.
+
+    Recebe registros já validados e executa a gravação em lotes.
+    Não realiza download nem interpreta o layout original dos arquivos.
+    """
+```
+
+### Métodos e funções
+
+Todo método ou função deve possuir docstring descrevendo:
+
+- o que faz;
+- parâmetros recebidos;
+- valor retornado;
+- possíveis exceções;
+- efeitos colaterais, como gravação de arquivo ou banco.
+
+Exemplo:
+
+```python
+def salvar_registros(self, registros):
+    """
+    Salva os registros no banco de dados em lotes.
+
+    Args:
+        registros: Registros normalizados que serão persistidos.
+
+    Returns:
+        int: Quantidade de registros gravados.
+
+    Raises:
+        ErroDeBanco: Quando a gravação no Neon falhar.
+    """
+    pass
+```
+
+### Código complexo
+
+Quando uma regra não for evidente, adicionar comentário explicando o motivo da regra, e não apenas repetindo o que o código já faz:
+
+```python
+# Identificadores devem permanecer como texto para preservar zeros à esquerda
+# e evitar perda de precisão em códigos longos retornados pela API.
+identificador_compra = str(valor_original)
+```
+
+## Tratamento de erros
+
+1. Não utilizar `except Exception` sem registrar e tratar adequadamente o erro.
+2. Criar exceções específicas em português quando necessário.
+3. Informar no erro qual arquivo, fonte ou operação falhou.
+4. Registrar erros com contexto suficiente para diagnóstico.
+5. Não esconder falhas de download, validação ou importação.
+6. Não excluir o arquivo original quando o processamento falhar.
+7. Mover arquivos inválidos para `data/error` ou registrar sua situação no manifesto.
+
+Exemplo:
+
+```python
+class ErroDeDownload(Exception):
+    """Indica falha ao baixar um arquivo externo."""
+
+
+class ErroDeValidacao(Exception):
+    """Indica que um arquivo ou registro não atende ao layout esperado."""
+```
+
+## Regras para banco e valores
+
+- Usar SQLAlchemy e o driver PostgreSQL para conexão com o Neon.
+- Manter a URL de conexão em variável de ambiente.
+- Não gravar credenciais no código.
+- Usar `Decimal` para valores monetários.
+- Preservar CNPJ, CPF, códigos e identificadores como texto.
+- Executar inserções em lotes para arquivos grandes.
+- Registrar a origem e a competência de cada carga.
+- Separar a conexão, os modelos e os repositórios em módulos próprios.
+
+## Regras para a aplicação Windows
+
+- O item de menu deve chamar um serviço da aplicação, e não implementar a lógica diretamente.
+- A interface deve apresentar status, progresso, mensagens e erros ao usuário.
+- Operações demoradas não devem bloquear a janela principal.
+- O cancelamento solicitado pelo usuário deve ser respeitado quando possível.
+- O processamento deve continuar registrando logs mesmo quando a tela não estiver aberta.
+- A aplicação deve permitir selecionar fonte, competência e pasta de armazenamento.
+
+## Checklist antes de concluir um código
+
+- [ ] Os nomes estão em português?
+- [ ] Classes, métodos e funções possuem responsabilidades claras?
+- [ ] O download utiliza uma classe específica?
+- [ ] A interface está separada da lógica de negócio?
+- [ ] Cada método possui separador visual?
+- [ ] Classes, métodos e regras complexas estão documentados?
+- [ ] Erros possuem mensagens claras?
+- [ ] Valores monetários usam `Decimal`?
+- [ ] Identificadores são tratados como texto?
+- [ ] Credenciais estão fora do código?
+- [ ] O código pode ser executado e diagnosticado no Windows?
+
+## Instrução final para geração de código
+
+Ao criar ou alterar código para este projeto, siga integralmente este padrão. Antes de entregar a implementação, verifique a nomenclatura em português, a separação de responsabilidades, a documentação das classes e métodos, o uso das classes específicas de download e a presença do separador entre todos os métodos.

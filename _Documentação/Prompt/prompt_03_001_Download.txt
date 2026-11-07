@@ -1,0 +1,143 @@
+
+# Baixa dados dos arquivos .CSV
+
+
+
+
+DAdos do Governo Federal - ComprasGov para download
+C:\_Trabalho\RadarDasLicitacoes\_Documentação\Analise\Documentacao_Dados_ComprasGov.md
+
+
+padrão de código: C:\_Trabalho\RadarDasLicitacoes\_Documentação\Prompt\prompt_01_001 Padrão de código.txt
+
+
+Vamos montarrotina para download dos arquivos.csv
+devemos ter uma biblioteca especifica par download dos csv
+
+
+
+
+
+
+
+
+
+
+
+../
+arp/                                               10-Oct-2026 08:03       -
+catalogo_cnbs/                                     31-Oct-2026 06:02       -
+compras_legado/                                    05-Oct-2026 16:14       -
+pesquisa_precos/                                   05-Oct-2026 19:27       -
+pncp/                                              05-Oct-2026 15:51       -
+propostas/           
+
+
+arp
+arp/                                               10-Oct-2026 08:03       -
+../
+2023/                                              10-Oct-2026 08:04       -
+2024/                                              10-Oct-2026 08:06       -
+2025/                                              10-Oct-2026 08:08       -
+atas_2025.csv.zip                                  10-Oct-2026 08:03     14M
+atas_itens_2025.csv.zip                            10-Oct-2026 08:08     78M
+2026/                                              10-Oct-2026 08:09       -
+atas_2026.csv.zip                                  31-Oct-2026 08:01      7M
+atas_itens_2026.csv.zip                            31-Oct-2026 08:03     38M
+Aqui usar somente 2025 E 2026 ou superiot
+
+
+catalogo_cnbs
+
+https://repositorio.dados.gov.br/seges/comprasgov/catalogo_cnbs/
+LEIAME.md                                          31-Oct-2026 06:00    1203
+catmat.csv                                         31-Oct-2026 06:02    123M
+catser.csv                                         31-Oct-2026 06:02    506K
+
+
+
+compras_legado
+https://repositorio.dados.gov.br/seges/comprasgov/compras_legado/
+
+
+https://repositorio.dados.gov.br/seges/comprasgov/compras_legado/licitacao/
+
+https://repositorio.dados.gov.br/seges/comprasgov/compras_legado/licitacao/2025/
+tb_vw_licitacao_item_2025.csv.zip                  08-Jul-2026 17:24    1059
+vw_tb_vw_licitacao_2025.csv.zip                    07-Jul-2026 22:14      8M
+
+https://repositorio.dados.gov.br/seges/comprasgov/compras_legado/licitacao/2026/
+vw_tb_vw_licitacao_2026.csv.zip                    07-Jul-2026 22:14    1021
+
+Aqui baixar somente desses diretorios ou anos seguintes caso exista
+
+
+
+pesquisa_precos
+https://repositorio.dados.gov.br/seges/comprasgov/pesquisa_precos/
+
+
+https://repositorio.dados.gov.br/seges/comprasgov/pesquisa_precos/2025/
+o conteudo de todos os diretorios:
+01/                                                05-Oct-2026 19:56       -
+02/                                                05-Oct-2026 19:56       -
+03/                                                05-Oct-2026 19:57       -
+04/                                                05-Oct-2026 19:57       -
+05/                                                05-Oct-2026 19:57       -
+06/                                                05-Oct-2026 19:58       -
+07/                                                05-Oct-2026 19:58       -
+08/                                                05-Oct-2026 19:59       -
+09/                                                05-Oct-2026 19:59       -
+10/                                                05-Oct-2026 19:59       -
+11/                                                05-Oct-2026 20:00       -
+12/                                                05-Oct-2026 20:00       -
+
+
+https://repositorio.dados.gov.br/seges/comprasgov/pesquisa_precos/2026
+Idem para todos os diretorios dos meses que existam
+
+
+
+
+
+pncp
+https://repositorio.dados.gov.br/seges/comprasgov/pncp/
+
+https://repositorio.dados.gov.br/seges/comprasgov/pncp/2025/
+todos os meses:
+01/                                                05-Oct-2026 13:13       -
+02/                                                05-Oct-2026 13:13       -
+03/                                                05-Oct-2026 13:14       -
+04/                                                05-Oct-2026 13:14       -
+05/                                                05-Oct-2026 13:15       -
+06/                                                05-Oct-2026 13:16       -
+07/                                                05-Oct-2026 13:17       -
+08/                                                05-Oct-2026 13:19       -
+09/                                                05-Oct-2026 13:21       -
+10/                                                05-Oct-2026 13:23       -
+11/                                                05-Oct-2026 13:24       -
+12/                                                05-Oct-2026 13:27       -
+
+Mesmo para 2026
+
+
+
+Propostas
+https://repositorio.dados.gov.br/seges/comprasgov/propostas/
+pegar o conteudo de todos os diretorios dos anos que existam
+2025/                                              08-Oct-2026 22:53       -
+2026/                                              08-Oct-2026 23:45       -
+
+
+01/                                                01-Nov-2026 10:43       -
+02/                                                01-Nov-2026 10:52       -
+03/                                                01-Nov-2026 11:01       -
+04/                                                01-Nov-2026 11:10       -
+05/                                                01-Nov-2026 11:21       -
+06/                                                01-Nov-2026 11:30       -
+07/                                                01-Nov-2026 11:40       -
+08/                                                01-Nov-2026 11:50       -
+09/                                                01-Nov-2026 12:01       -
+10/                                                01-Nov-2026 12:11       -
+11/                                                01-Nov-2026 12:20       -
+12/                                                01-Nov-2026 12:28       -
