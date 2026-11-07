@@ -512,6 +512,29 @@ class ErroDeValidacao(Exception):
 - O processamento deve continuar registrando logs mesmo quando a tela não estiver aberta.
 - A aplicação deve permitir selecionar fonte, competência e pasta de armazenamento.
 
+### Recomendação para barras de ferramentas e ícones
+
+Nas implementações futuras de interfaces gráficas, utilizar barras de ferramentas
+compactas e consistentes com aplicações modernas, como Visual Studio e Microsoft
+Office:
+
+- utilizar somente pictogramas nos botões da barra, mantendo os textos nas opções
+  de menu e nos tooltips;
+- utilizar ícones vetoriais ou imagens próprias, evitando depender de caracteres
+  Unicode cuja aparência pode variar conforme a fonte e o sistema operacional;
+- manter os ícones com tamanho visual adequado, alinhamento uniforme, espaçamento
+  consistente e área de clique acessível;
+- utilizar cores distintas para diferenciar ações, sem comprometer contraste e
+  acessibilidade;
+- alterar o ícone para vermelho durante o estado `hover`, quando essa for a
+  convenção visual definida para a aplicação;
+- exibir um tooltip objetivo ao posicionar o mouse sobre cada pictograma;
+- utilizar estados visuais claros para normal, `hover`, pressionado e desabilitado;
+- manter a ação executada pelo ícone disponível também no menu, garantindo
+  acessibilidade e redundância de navegação;
+- não colocar regras de negócio no código visual da barra: cada ação deve delegar
+  para o menu, serviço ou caso de uso correspondente.
+
 ## Checklist antes de concluir um código
 
 - [ ] Os nomes estão em português?

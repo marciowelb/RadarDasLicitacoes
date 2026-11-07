@@ -17,6 +17,13 @@ A versão atual implementa a primeira etapa da ingestão:
 
 Ainda não estão implementados o download de CNPJ, retry automático, hash, persistência em banco, staging, normalização e análise de preços com IA.
 
+A janela principal possui uma barra de atalhos para o download de ComprasGov e para o formulário de CNPJ. O atalho de CNPJ está disponível visualmente, mas ainda exibe uma mensagem informando que a funcionalidade será implementada posteriormente.
+
+O menu `Ajuda` possui:
+
+- `README`: lê o arquivo `README.md` e o abre no navegador com Markdown renderizado e diagramas Mermaid, utilizando as bibliotecas JavaScript carregadas pela página;
+- `Sobre`: exibe o objetivo do sistema, o autor e os dados de contato.
+
 ## Execução
 
 Na raiz do projeto:
@@ -53,6 +60,8 @@ Requisitos: Python `>=3.11` e dependência `httpx>=0.27,<1.0`. O `tkinter` tamb�
 │   └── interface/
 │       ├── janela_principal.py          # Janela raiz e ciclo Tkinter
 │       ├── menu_download.py              # Menu e abertura das operações
+│       ├── menu_ajuda.py                 # Menu README e Sobre
+│       ├── janela_ajuda.py               # Visualização do README e Sobre
 │       └── janela_download_comprasgov.py # Orquestração da operação
 ├── data/
 │   ├── raw/comprasgov/                  # CSVs extraídos e manifesto
@@ -84,6 +93,17 @@ classDiagram
         +criar_menu(barra_de_menu)
         +exibir_download_compras_governamentais()
         +exibir_download_cnpj()
+    }
+    class MenuAjuda {
+        +criar_menu(barra_de_menu)
+        +exibir_readme()
+        +exibir_sobre()
+    }
+    class JanelaReadme {
+        +abrir_readme()
+    }
+    class JanelaSobre {
+        +__init__(janela_pai)
     }
     class JanelaDownloadComprasGov {
         -fonte_comprasgov
@@ -134,7 +154,10 @@ classDiagram
     main_py --> AppMain : delega
     AppMain --> JanelaPrincipal : cria
     JanelaPrincipal *-- MenuDownload : compõe
+    JanelaPrincipal *-- MenuAjuda : compõe
     MenuDownload --> JanelaDownloadComprasGov : abre
+    MenuAjuda --> JanelaReadme : abre README
+    MenuAjuda --> JanelaSobre : abre informações
     JanelaDownloadComprasGov *-- FonteComprasGov
     JanelaDownloadComprasGov *-- BaixadorDeArquivos
     JanelaDownloadComprasGov *-- ValidadorDeDownload
