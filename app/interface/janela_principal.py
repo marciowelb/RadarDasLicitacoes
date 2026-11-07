@@ -41,12 +41,18 @@ class JanelaPrincipal:
         self.menu_download = MenuDownload(self.janela)
         self.configurar_janela()
         self.criar_menu()
-
     # -------------------------------------------------------------------------
 
     def configurar_janela(self):
         """Define a janela principal como uma barra fina de menus."""
-        self.janela.title("Radar das Licitações - v:2026-11-06(a) ")
+
+        # ---------------------------------------------------------
+        #   TITULO DA APLICACAO COM A VERSÃO
+        # ---------------------------------------------------------
+        self.janela.title("Radar das Licitações - v:2026-11-07(a) ")
+        # ---------------------------------------------------------
+
+
         self.janela.geometry("520x55")
         self.janela.minsize(420, 55)
         self.janela.resizable(True, False)

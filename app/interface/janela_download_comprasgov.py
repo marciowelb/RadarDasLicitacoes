@@ -18,7 +18,6 @@
 from pathlib import Path
 from datetime import date
 from threading import Thread
-import calendar
 import tkinter as tk
 from tkinter import messagebox, ttk
 
@@ -26,6 +25,8 @@ from app.configuracao import (
     DIRETORIO_DADOS_BRUTOS,
     DIRETORIO_DOWNLOAD_TEMPORARIO,
     DIRETORIO_MANIFESTO,
+    ANO_INICIAL_DADOS,
+    MES_INICIAL_DADOS,
 )
 from app.download.baixador_de_arquivos import BaixadorDeArquivos
 from app.download.extrator_de_csv import ExtratorDeCsv
@@ -34,107 +35,10 @@ from app.download.validador_de_download import ValidadorDeDownload
 from app.fontes.fonte_comprasgov import FonteComprasGov
 
 
-class CalendarioCompetencia:
-    """Exibe um calendário para selecionar uma competência mensal."""
-
-    def __init__(self, janela_pai, ano, mes, ao_selecionar):
-        self.janela = tk.Toplevel(janela_pai)
-        self.janela.title("Selecionar competência")
-        self.janela.resizable(False, False)
-        self.janela.transient(janela_pai)
-        self.janela.grab_set()
-        self.ano = ano
-        self.mes = mes
-        self.ao_selecionar = ao_selecionar
-        self.criar_componentes()
-        self.atualizar_calendario()
-
-    def criar_componentes(self):
-        """Cria navegação, título e grade de dias do calendário."""
-        quadro_navegacao = ttk.Frame(self.janela)
-        quadro_navegacao.pack(fill="x", padx=8, pady=8)
-        ttk.Button(quadro_navegacao, text="◀", width=3, command=self.mes_anterior).pack(side="left")
-        self.seletor_mes = ttk.Combobox(
-            quadro_navegacao,
-            values=tuple(f"{mes:02d}" for mes in range(1, 13)),
-            state="readonly",
-            width=5,
-        )
-        self.seletor_mes.pack(side="left", padx=(8, 2))
-        self.seletor_mes.bind("<<ComboboxSelected>>", self.alterar_competencia)
-        self.seletor_ano = ttk.Combobox(
-            quadro_navegacao,
-            values=tuple(str(ano) for ano in range(2000, 2101)),
-            state="readonly",
-            width=7,
-        )
-        self.seletor_ano.pack(side="left", padx=2)
-        self.seletor_ano.bind("<<ComboboxSelected>>", self.alterar_competencia)
-        ttk.Button(quadro_navegacao, text="▶", width=3, command=self.proximo_mes).pack(side="right")
-        self.quadro_dias = ttk.Frame(self.janela)
-        self.quadro_dias.pack(padx=8, pady=(0, 8))
-
-    def atualizar_calendario(self):
-        """Atualiza o título e os dias do mês exibido."""
-        for componente in self.quadro_dias.winfo_children():
-            componente.destroy()
-        nomes_dias = ("Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom")
-        for coluna, nome_dia in enumerate(nomes_dias):
-            ttk.Label(self.quadro_dias, text=nome_dia, anchor="center", width=5).grid(
-                row=0, column=coluna, padx=1, pady=2
-            )
-        self.seletor_mes.set(f"{self.mes:02d}")
-        self.seletor_ano.set(str(self.ano))
-        for linha, semana in enumerate(calendar.monthcalendar(self.ano, self.mes), start=1):
-            for coluna, dia in enumerate(semana):
-                if dia == 0:
-                    ttk.Label(self.quadro_dias, text="", width=5).grid(
-                        row=linha, column=coluna, padx=1, pady=1
-                    )
-                else:
-                    ttk.Button(
-                        self.quadro_dias,
-                        text=str(dia),
-                        width=3,
-                        command=lambda dia=dia: self.selecionar(dia),
-                    ).grid(row=linha, column=coluna, padx=1, pady=1)
-
-    def alterar_competencia(self, evento=None):
-        """Atualiza o calendário quando mês ou ano é escolhido diretamente."""
-        try:
-            self.mes = int(self.seletor_mes.get())
-            self.ano = int(self.seletor_ano.get())
-        except ValueError:
-            return
-        self.atualizar_calendario()
-
-    def mes_anterior(self):
-        """Navega para a competência mensal anterior."""
-        if self.mes == 1:
-            self.mes, self.ano = 12, self.ano - 1
-        else:
-            self.mes -= 1
-        self.atualizar_calendario()
-
-    def proximo_mes(self):
-        """Navega para a competência mensal seguinte."""
-        if self.mes == 12:
-            self.mes, self.ano = 1, self.ano + 1
-        else:
-            self.mes += 1
-        self.atualizar_calendario()
-
-    def selecionar(self, dia):
-        """Informa a competência escolhida e fecha o calendário."""
-        self.ao_selecionar(self.ano, self.mes)
-        self.janela.destroy()
-
-
 class JanelaDownloadComprasGov:
     """Executa o download dos arquivos ComprasGov em janela independente."""
 
     # -------------------------------------------------------------------------
-
     def __init__(self, janela_principal):
         """Inicializa a janela e seus componentes de download."""
         self.janela_principal = janela_principal
@@ -146,24 +50,28 @@ class JanelaDownloadComprasGov:
         self.manifesto = ManifestoDeArquivos(DIRETORIO_MANIFESTO)
         self.download_em_execucao = False
         hoje = date.today()
-        indice_mes = hoje.year * 12 + hoje.month - 1 - 11
-        self.ano_inicial_padrao = indice_mes // 12
-        self.mes_inicial_padrao = indice_mes % 12 + 1
+        self.ano_inicial_padrao = ANO_INICIAL_DADOS
+        self.mes_inicial_padrao = MES_INICIAL_DADOS
         self.ano_final_padrao = hoje.year
         self.mes_final_padrao = hoje.month
         self.configurar_janela()
         self.criar_componentes()
-
     # -------------------------------------------------------------------------
 
+
+
+    # -------------------------------------------------------------------------
     def configurar_janela(self):
         """Configura tamanho, título e comportamento da janela."""
         self.janela.title("Download dados Compras Governamentais")
         self.janela.geometry("800x620")
         self.janela.minsize(700, 500)
-
     # -------------------------------------------------------------------------
 
+
+
+
+    # -------------------------------------------------------------------------
     def criar_componentes(self):
         """Cria os campos, botões, log e barra de progresso."""
         quadro_selecao = ttk.LabelFrame(self.janela, text="Parâmetros do download")
@@ -180,29 +88,48 @@ class JanelaDownloadComprasGov:
         )
         seletor_familia.grid(row=0, column=1, padx=8, pady=8)
 
-        ttk.Label(quadro_selecao, text="Início (ano/mês):").grid(row=0, column=2, padx=8, pady=8)
-        self.ano_inicial = tk.StringVar(value=str(self.ano_inicial_padrao))
-        self.mes_inicial = tk.StringVar(value=f"{self.mes_inicial_padrao:02d}")
-        self.texto_competencia_inicio = tk.StringVar()
-        self.atualizar_texto_competencia("inicio")
-        ttk.Button(
-            quadro_selecao,
-            textvariable=self.texto_competencia_inicio,
-            command=lambda: self.abrir_calendario("inicio"),
-            width=14,
-        ).grid(row=0, column=3, columnspan=2, padx=2, pady=8)
+        anos = tuple(str(ano) for ano in range(ANO_INICIAL_DADOS, date.today().year + 2))
+        meses = tuple(f"{mes:02d}" for mes in range(1, 13))
 
-        ttk.Label(quadro_selecao, text="Fim (ano/mês):").grid(row=0, column=5, padx=8, pady=8)
-        self.ano_final = tk.StringVar(value=str(self.ano_final_padrao))
-        self.mes_final = tk.StringVar(value=f"{self.mes_final_padrao:02d}")
-        self.texto_competencia_fim = tk.StringVar()
-        self.atualizar_texto_competencia("fim")
-        ttk.Button(
+        ttk.Label(quadro_selecao, text="Início - ano:").grid(row=0, column=2, padx=(8, 2), pady=8)
+        self.ano_inicial = tk.StringVar(value=str(self.ano_inicial_padrao))
+        ttk.Combobox(
             quadro_selecao,
-            textvariable=self.texto_competencia_fim,
-            command=lambda: self.abrir_calendario("fim"),
-            width=14,
-        ).grid(row=0, column=6, columnspan=2, padx=2, pady=8)
+            textvariable=self.ano_inicial,
+            values=anos,
+            state="readonly",
+            width=7,
+        ).grid(row=0, column=3, padx=2, pady=8)
+
+        ttk.Label(quadro_selecao, text="mês:").grid(row=0, column=4, padx=(8, 2), pady=8)
+        self.mes_inicial = tk.StringVar(value=f"{self.mes_inicial_padrao:02d}")
+        ttk.Combobox(
+            quadro_selecao,
+            textvariable=self.mes_inicial,
+            values=meses,
+            state="readonly",
+            width=4,
+        ).grid(row=0, column=5, padx=2, pady=8)
+
+        ttk.Label(quadro_selecao, text="Fim - ano:").grid(row=0, column=6, padx=(8, 2), pady=8)
+        self.ano_final = tk.StringVar(value=str(self.ano_final_padrao))
+        ttk.Combobox(
+            quadro_selecao,
+            textvariable=self.ano_final,
+            values=anos,
+            state="readonly",
+            width=7,
+        ).grid(row=0, column=7, padx=2, pady=8)
+
+        ttk.Label(quadro_selecao, text="mês:").grid(row=0, column=8, padx=(8, 2), pady=8)
+        self.mes_final = tk.StringVar(value=f"{self.mes_final_padrao:02d}")
+        ttk.Combobox(
+            quadro_selecao,
+            textvariable=self.mes_final,
+            values=meses,
+            state="readonly",
+            width=4,
+        ).grid(row=0, column=9, padx=2, pady=8)
 
         quadro_botoes = ttk.Frame(self.janela)
         quadro_botoes.pack(fill="x", padx=12, pady=(0, 8))
@@ -241,55 +168,21 @@ class JanelaDownloadComprasGov:
         barra_rolagem = ttk.Scrollbar(quadro_log, command=self.log.yview)
         barra_rolagem.pack(side="right", fill="y")
         self.log.configure(yscrollcommand=barra_rolagem.set)
-
     # -------------------------------------------------------------------------
 
-    def atualizar_texto_competencia(self, tipo):
-        """Atualiza o texto do botão com o ano e mês selecionados."""
-        if tipo == "inicio":
-            texto = self.texto_competencia_inicio
-            ano, mes = self.ano_inicial, self.mes_inicial
-        else:
-            texto = self.texto_competencia_fim
-            ano, mes = self.ano_final, self.mes_final
-        texto.set(f"{int(mes.get()):02d}/{ano.get()}")
+
+
+
 
     # -------------------------------------------------------------------------
-
-    def abrir_calendario(self, tipo):
-        """Abre o calendário para alterar a competência inicial ou final."""
-        if tipo == "inicio":
-            ano, mes = int(self.ano_inicial.get()), int(self.mes_inicial.get())
-        else:
-            ano, mes = int(self.ano_final.get()), int(self.mes_final.get())
-        CalendarioCompetencia(
-            self.janela,
-            ano,
-            mes,
-            lambda ano_selecionado, mes_selecionado: self.definir_competencia(
-                tipo,
-                ano_selecionado,
-                mes_selecionado,
-            ),
-        )
-
-    # -------------------------------------------------------------------------
-
-    def definir_competencia(self, tipo, ano, mes):
-        """Grava a competência escolhida no calendário."""
-        if tipo == "inicio":
-            self.ano_inicial.set(str(ano))
-            self.mes_inicial.set(f"{mes:02d}")
-        else:
-            self.ano_final.set(str(ano))
-            self.mes_final.set(f"{mes:02d}")
-        self.atualizar_texto_competencia(tipo)
-
-    # -------------------------------------------------------------------------
-
     def registrar_log(self, mensagem):
         """Adiciona uma mensagem ao log de forma segura para a interface."""
         self.janela.after(0, self._adicionar_log, mensagem)
+    # -------------------------------------------------------------------------
+
+
+
+
 
     # -------------------------------------------------------------------------
 

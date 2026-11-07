@@ -17,10 +17,17 @@
 
 from pathlib import Path
 
-
+# ----------------------------------------------------------
 URL_BASE_COMPRASGOV = "https://repositorio.dados.gov.br/seges/comprasgov/"
-ANO_INICIAL_DADOS = 2025
-MES_INICIAL_DADOS = 1
+
+# Periodo de inicio da baixa dos dados, se necessario, pode ser alterado para um periodo mais antigo.
+# deixei fixo essa data pois o volume é grande de dados, dificultado upload no git.
+ANO_INICIAL_DADOS = 2026
+MES_INICIAL_DADOS = 10
+# ----------------------------------------------------------
+
+
+
 DIRETORIO_DADOS_BRUTOS = Path("data/raw/comprasgov")
 DIRETORIO_DOWNLOAD_TEMPORARIO = Path("data/temporario/downloads")
 DIRETORIO_MANIFESTO = DIRETORIO_DADOS_BRUTOS / "manifesto_download.jsonl"
